@@ -1,10 +1,9 @@
 package main
 
 import (
-    //"encoding/json"
+    "encoding/json"
     "fmt"
     "net/http"
-    //"github.com/gorilla/mux"
 )
 
 var (
@@ -12,23 +11,26 @@ var (
     currentPlayer int
 )
 
-// Start displays a welcome message
-func Start(w http.ResponseWriter, r *http.Request) {
+func initGame() {
     game = new(Noughts)
     currentPlayer = 1
+}
 
-    fmt.Fprintln(w, "Game intialized")
+// Reset resets the game
+func Reset(w http.ResponseWriter, r *http.Request) {
+    initGame()
+    fmt.Fprintln(w, "Game reintialized")
 }
 
 // Status displays the current game status
 func Status(w http.ResponseWriter, r *http.Request) {
     if game == nil {
-        fmt.Fprintln(w, "Game is not started")
-        return
+        initGame()
     }
     fmt.Fprintln(w, game)
 
     fmt.Fprintf(w, "Next player is: Player %v\n", currentPlayer)
+
     winner := game.GetWinner()
     if winner != 0 {
         fmt.Fprintf(w, "** PLAYER %v WINS THE GAME **\n", winner)
@@ -37,13 +39,46 @@ func Status(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-// Play allows current player to play a move
-func Play(w http.ResponseWriter, r *http.Request) {
+// PlayData is the structure expected to be passed when playing
+type PlayData struct {
+    Row int `json:"row"`
+    Col int `json:"col"`
+}
 
-    if err := game.Play(1, 1, 1); err != nil {
+// Play allows current player to play a move and displays game
+func Play(w http.ResponseWriter, r *http.Request) {
+    if game == nil {
+        initGame()
+    }
+
+    // Retrieves and parse data
+    var data PlayData
+    decoder := json.NewDecoder(r.Body)
+    decoder.DisallowUnknownFields()
+
+    if err := decoder.Decode(&data); err != nil {
+        w.WriteHeader(http.StatusBadRequest)
         fmt.Fprintln(w, err)
+        return
+    }
+
+    // Records the move if possible
+    if err := game.Play(data.Row - 1, data.Col - 1, currentPlayer); err != nil {
+        w.WriteHeader(http.StatusBadRequest)
+        fmt.Fprintln(w, err)
+        return
+    }
+
+    // Displays game and changes player
+    fmt.Fprintln(w, game)
+    fmt.Fprintf(w, "Move recorded at position %vx%v for player %v\n", data.Row, data.Col, currentPlayer)
+    currentPlayer = 3 - currentPlayer
+
+    winner := game.GetWinner()
+    if winner != 0 {
+        fmt.Fprintf(w, "** PLAYER %v WINS THE GAME **\n", winner)
     } else {
-        fmt.Fprintln(w, "Move recorded at position 1x1")
+        fmt.Fprintf(w, "No winner currently\n")
     }
 
 }

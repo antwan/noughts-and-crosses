@@ -1,22 +1,14 @@
 package main
 
 import (
-    "time"
     "bytes"
     "fmt"
 )
 
-// Todo is a simple structure to save a todo
-type Todo struct {
-    Name      string    `json:"name"`
-    Completed bool      `json:"completed"`
-    Due       time.Time `json:"due"`
-}
-
-// Todos is a list of Todo
-type Todos []Todo
-
+// BOARDROWS is the number of rows in the board
 const BOARDROWS = 3
+
+// BOARDCOLS is the number of rows in the board
 const BOARDCOLS = 3
 
 // Noughts is a structure holding a game of noughts and crosses
@@ -46,7 +38,7 @@ func (n *Noughts) GetWinner() int {
     for r := 0; r < BOARDROWS; r++ {
         rowWinner := 0
         for c := 0; c < BOARDCOLS; c++ {
-            if c == 0 {
+            if c == 0 && n.board[r][c] != 0 {
                 rowWinner = n.board[r][c]
             } else if n.board[r][c] != rowWinner {
                 rowWinner = 0
@@ -54,6 +46,7 @@ func (n *Noughts) GetWinner() int {
             }
         }
         if rowWinner != 0 {
+            fmt.Println("rowWinner")
             return rowWinner
         }
     }
@@ -62,7 +55,7 @@ func (n *Noughts) GetWinner() int {
     for c := 0; c < BOARDCOLS; c++ {
         colWinner := 0
         for r := 0; r < BOARDROWS; r++ {
-            if r == 0 {
+            if r == 0 && n.board[r][c] != 0 {
                 colWinner = n.board[r][c]
             } else if n.board[r][c] != colWinner {
                 colWinner = 0
@@ -70,38 +63,42 @@ func (n *Noughts) GetWinner() int {
             }
         }
         if colWinner != 0 {
+            fmt.Println("colWinner")
             return colWinner
         }
     }
 
     // Checks if winner exists on diags
     if BOARDCOLS == BOARDROWS {
+        diagWinner := 0
         for c := 0; c < BOARDCOLS; c++ {
-            diagWinner := 0
-
-            if c == 0 {
+            if c == 0 && n.board[c][c] != 0 {
+                fmt.Printf("n.board[%v][%v]=%v", c, c, n.board[c][c])
                 diagWinner = n.board[c][c]
             } else if n.board[c][c] != diagWinner {
+                fmt.Printf("n.board[%v][%v]=%v != %v", c, c, n.board[c][c], diagWinner)
                 diagWinner = 0
                 break
-            }
-            if diagWinner != 0 {
-                return diagWinner
             }
         }
+        if diagWinner != 0 {
+            fmt.Println("diagwinner")
+            return diagWinner
+        }
+        diagWinner = 0
         for c := 0; c < BOARDCOLS; c++ {
-            diagWinner := 0
             d := BOARDCOLS - 1 - c
 
-            if c == 0 {
-                diagWinner = n.board[c][d]
-            } else if n.board[c][d] != diagWinner {
+            if c == 0 && n.board[d][c] != 0 {
+                diagWinner = n.board[d][c]
+            } else if n.board[d][c] != diagWinner {
                 diagWinner = 0
                 break
             }
-            if diagWinner != 0 {
-                return diagWinner
-            }
+        }
+        if diagWinner != 0 {
+            fmt.Println("diagwinner2")
+            return diagWinner
         }
     }
     return 0

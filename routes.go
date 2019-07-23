@@ -13,39 +13,37 @@ type Route struct {
     HandlerFunc http.HandlerFunc
 }
 
-type Routes []Route
 
 // NewRouter returns the route
 func NewRouter() *mux.Router {
     router := mux.NewRouter().StrictSlash(true)
     for _, route := range routes {
-        router.
-            Methods(route.Method).
-            Path(route.Pattern).
-            Name(route.Name).
-            Handler(route.HandlerFunc)
+        handler := Logger(route.HandlerFunc, route.Name)
+        router.Methods(route.Method).Path(route.Pattern).Name(route.Name).Handler(handler)
     }
-
     return router
 }
 
+// Routes holds the list of routes for the mux router
+type Routes []Route
+
 var routes = Routes{
     Route{
-        "Status",
+        "Show status",
         "GET",
         "/",
         Status,
     },
     Route{
-        "Start",
+        "Reset game",
         "GET",
-        "/start",
-        Start,
+        "/reset",
+        Reset,
     },
     Route{
-        "Play",
-        "GET",
-        "/play",
+        "Play a move",
+        "POST",
+        "/",
         Play,
     },
 }
